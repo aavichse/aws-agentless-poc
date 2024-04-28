@@ -1,0 +1,17 @@
+{
+    "python.envFile": "${workspaceFolder}/.env",
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.venv": true,
+        "**/.terraform": true,
+        "**/*.log": false,
+    },
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./test",
+        "-p",
+        "test*.py"
+    ],
+    "python.testing.pytestEnabled": true,
+}

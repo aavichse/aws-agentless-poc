@@ -1,0 +1,17 @@
+boto3
+flask
+pydantic
+# gccomon dependencies 
+# TODO: gccommon setup needs to instell dependent packages 
+# see: management/docker_build/images/management/gc_service/pip_requirements.txt
+netaddr==0.8.0
+netifaces==0.11.0
+pyelftools==0.27
+attrs==21.2.0
+statsd==3.3.0
+pytricia==1.0.2
+dacite==1.6.0
+rsa==4.7.2 # not directly required, pinned by Snyk to avoid a vulnerability
+./dist/guardicore-1.0-py3-none-any.whl
+
+mongoengine==0.23.1

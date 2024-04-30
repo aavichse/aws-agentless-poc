@@ -16,7 +16,7 @@
             "name": "aws-agent",
             "type": "debugpy",
             "request": "launch",
-            "module": "app",
+            "module": "agent",
             "cwd": "${workspaceFolder}/run",
             "env": {
                  "PYTHONPATH": "${workspaceFolder}"

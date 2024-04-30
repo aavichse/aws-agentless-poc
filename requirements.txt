@@ -1,6 +1,8 @@
 boto3
 flask
 pydantic
+pandas
+kafka-python
 # gccomon dependencies 
 # TODO: gccommon setup needs to instell dependent packages 
 # see: management/docker_build/images/management/gc_service/pip_requirements.txt

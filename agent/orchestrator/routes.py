@@ -15,8 +15,8 @@ def route(api: Flask, orchestrator: AWSOrchestrator):
         count += 1
         LOG.info(f'Method: {request.method}, Path: {request.path}')
 
-        headers = {k: v for k, v in request.headers.items()}
-        LOG.info(f'Headers: {headers}')
+        #headers = {k: v for k, v in request.headers.items()}
+        #LOG.info(f'Headers: {headers}')
 
         try:
             data = request.get_json()
@@ -24,15 +24,17 @@ def route(api: Flask, orchestrator: AWSOrchestrator):
         except Exception as e:
             body = request.get_data(as_text=True) if request.data else 'No body'
 
-        LOG.info(f'BODY: {body}')
+        #LOG.info(f'BODY: {body}')
 
         return jsonify({'message': f'#{count}'}), 200
 
 
     @api.route('/inventory/v1/provider/inventory', methods=['GET'])
     def get_inventory():
-        LOG.info(f'Get inventory')
-        inventory_items = [item.model_dump_json(by_alias=True) for item in orchestrator.inventory.items]
+        inventory= orchestrator.inventory
+
+        LOG.info(f'Request inventory: Total items={len(inventory.items)}')
+        inventory_items = [item.model_dump_json(by_alias=True) for item in inventory.items]
         inventory_json = '[' + ','.join(inventory_items) + ']'
         inventory_bytes = inventory_json.encode('utf-8')
         return Response(inventory_bytes, mimetype='application/json', status=200)

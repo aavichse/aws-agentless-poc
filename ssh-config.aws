@@ -1,0 +1,18 @@
+
+Host gca-vm-rag
+    HostName  ec2-18-207-127-231.compute-1.amazonaws.com
+
+Host gca-vm-llm
+    HostName  ec2-54-163-200-237.compute-1.amazonaws.com
+
+Host gca-vm-monitor
+    HostName  ec2-3-80-118-248.compute-1.amazonaws.com
+
+Host gca-vm-cloudapp
+    HostName  ec2-44-200-243-86.compute-1.amazonaws.com
+
+host gca-*
+    User ubuntu
+    IdentityFile /home/aavichse/.ssh/aws-aavichse.pem
+    ServerAliveInterval 60
+

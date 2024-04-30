@@ -1,0 +1,21 @@
+# SSH configuration for thin environment remote machines.
+# To switch between environments, modify the hostname under the 
+# "Host thin-*" rule.
+# 
+# note:
+# the password is  "dGlzY3RtdDE=" 
+# Run echo <password> | base64 --decode
+
+Host thin-testing
+    Port 22
+
+Host thin-collector
+    Port 1445
+
+Host thin-mgmt
+    Port 222
+
+Host thin-*
+    Hostname 310.thin.env
+    User root 
+    ServerAliveInterval 60

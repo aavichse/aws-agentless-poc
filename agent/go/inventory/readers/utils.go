@@ -1,0 +1,37 @@
+package readers
+
+import (
+	contracts "agentless/infra/model/common"
+
+	"github.com/aws/aws-sdk-go/service/ec2"
+)
+
+func AwsLabelFrom(tag *ec2.Tag) *contracts.Label {
+	return &contracts.Label{
+		Key:   *tag.Key,
+		Value: *tag.Value,
+	}
+}
+
+func AwsLabelsListFrom(tags []*ec2.Tag) *[]contracts.Label {
+	labels := make([]contracts.Label, 0, len(tags))
+	for _, tag := range tags {
+		labels = append(labels, *AwsLabelFrom(tag))
+	}
+	return &labels
+}
+
+func AwsTagsToMap(tags []*ec2.Tag) *map[string]string {
+	tagMap := make(map[string]string)
+	for _, tag := range tags {
+		tagMap[*tag.Key] = *tag.Value
+	}
+	return &tagMap
+}
+
+func GetValueOrDefault(tags *map[string]string, key, defaultValue string) string {
+	if value, ok := (*tags)[key]; ok {
+		return value
+	}
+	return defaultValue
+}

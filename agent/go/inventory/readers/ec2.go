@@ -64,8 +64,6 @@ func ToInventoryItemFrom(instance *ec2.Instance) (*model.InventoryItem, error) {
 		Labels:         AwsLabelsListFrom(instance.Tags),
 	}
 
-	item.EntityData.FromVMData(*ToVMDataFrom(instance))
-
 	return item, nil
 }
 

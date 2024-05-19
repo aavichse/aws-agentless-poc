@@ -45,7 +45,7 @@ func (s *InventoryService) GetV1ProviderTopology(c *gin.Context, params GetV1Pro
 }
 
 func (s *InventoryService) Update(revision int, fetchedInventory *map[string]readers.Resource) {
-	logger.Log.Infof("Cycle %d: Total EC2=%d", revision, len(*fetchedInventory))
+	logger.Log.Infof("Cycle %d: Total Inventory=%d", revision, len(*fetchedInventory))
 
 	s.inventory = fetchedInventory
 	s.revision = revision

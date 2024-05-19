@@ -121,15 +121,20 @@ func (f *AWSFetcher) read() {
 			continue
 		}
 
-		f.sema <- struct{}{} // Acquire a slot
+		regionReaders := []readers.ResourceReader{
+			readers.NewEC2Reader(sess, region, f.updates),
+			readers.NewVpcEndpointReader(sess, region, f.updates),
+		}
 
-		wg.Add(1)
-		reader := readers.NewEC2Reader(sess, region, f.updates)
-		go func(r *readers.EC2Reader) {
-			defer wg.Done()
-			r.Read()
-			<-f.sema
-		}(reader)
+		for _, reader := range regionReaders {
+			f.sema <- struct{}{} // Acquire a slot
+			wg.Add(1)
+			go func(r readers.ResourceReader) {
+				defer wg.Done()
+				r.Read()
+				<-f.sema
+			}(reader)
+		}
 	}
 	wg.Wait()
 }

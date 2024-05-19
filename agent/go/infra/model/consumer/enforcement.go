@@ -4,7 +4,7 @@
 package models
 
 import (
-	externalRef0 "common/common.yaml"
+	externalRef0 "agentless/infra/model/common"
 )
 
 // Defines values for CriterionType.

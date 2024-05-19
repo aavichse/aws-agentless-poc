@@ -4,7 +4,7 @@
 package models
 
 import (
-	externalRef1 "common/inventory.yaml"
+	externalRef0 "agentless/infra/model/common"
 )
 
 // Defines values for ConnectionInfoDirection.
@@ -63,7 +63,7 @@ type ConnectionInfo struct {
 
 	// DestDomain Domain associated with the destination in the network event (FQDN)
 	DestDomain        *string                     `json:"dest-domain,omitempty"`
-	DestInventoryItem *externalRef1.InventoryItem `json:"dest-inventory-item,omitempty"`
+	DestInventoryItem *externalRef0.InventoryItem `json:"dest-inventory-item,omitempty"`
 
 	// DestIp Destination IP address of the network event.
 	DestIp string `json:"dest-ip"`
@@ -101,7 +101,7 @@ type ConnectionInfo struct {
 
 	// ReportingEntity Entity that reported the network event.
 	ReportingEntity     ReportingEntity             `json:"reporting-entity"`
-	SourceInventoryItem *externalRef1.InventoryItem `json:"source-inventory-item,omitempty"`
+	SourceInventoryItem *externalRef0.InventoryItem `json:"source-inventory-item,omitempty"`
 
 	// SourceIp Source IP address of the network event.
 	SourceIp string `json:"source-ip"`

@@ -11,6 +11,6 @@ find "$CONTRACTS_SRC_DIR" -name '*.yaml' -exec bash -c '
   OUTPUT_FILE="$outdir/$(basename ${FILE%.yaml}).go"
   echo "Generating Go code for $FILE -> $OUTPUT_FILE"
   oapi-codegen --package models \
-   --import-mapping=../common/common.yaml:common/common.yaml,../common/inventory.yaml:common/inventory.yaml \
+   --import-mapping=../common/common.yaml:agentless/infra/model/common,../common/inventory.yaml:agentless/infra/model/common \
    --generate types "$FILE" > "$OUTPUT_FILE"
 ' sh {} \;

@@ -4,14 +4,14 @@
 package models
 
 import (
-	externalRef1 "common/inventory.yaml"
+	externalRef0 "agentless/infra/model/common"
 )
 
 // Inventory defines model for Inventory.
-type Inventory = []externalRef1.InventoryItem
+type Inventory = []externalRef0.InventoryItem
 
 // Labels defines model for Labels.
-type Labels = []externalRef1.Label
+type Labels = []externalRef0.Label
 
 // NetworkConnections defines model for NetworkConnections.
 type NetworkConnections struct {

@@ -6,7 +6,7 @@ package models
 import (
 	"encoding/json"
 
-	externalRef0 "common/common.yaml"
+	externalRef0 "agentless/infra/model/common"
 
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"

@@ -10,7 +10,7 @@ import (
 
 const (
 	defaultLogPath        = "/var/log/agentless/inventory.log"
-	defaultFetchInterval  = 10
+	defaultFetchInterval  = 60
 	defaultMaxConcurrency = 3
 )
 

@@ -33,7 +33,7 @@ func NewELBReader(sess *session.Session, region string, resource chan Resource) 
 func (r *ELBReader) Read() {
 	logger.Log.Infof("Reader Started: Type=ELB, region=%s", r.Region)
 	var err error = nil
-
+	
 	// TODO use when supporting classic
 	//err = r.ELBSvc.DescribeLoadBalancersPages(
 	//	&elb.DescribeLoadBalancersInput{},
@@ -48,7 +48,7 @@ func (r *ELBReader) Read() {
 	//if err != nil {
 	//	logger.Log.Fatalf("Failed read instances: %s", err)
 	//}
-
+	
 	err = r.ELBV2Svc.DescribeLoadBalancersPages(
 		&elbv2.DescribeLoadBalancersInput{},
 		func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
@@ -56,18 +56,18 @@ func (r *ELBReader) Read() {
 				item, _ := r.toInventoryItemFromELBV2(instance)
 				r.updates <- Resource{ID: *instance.LoadBalancerArn, Region: r.Region, Type: string(model.MS), Item: item}
 			}
-
+			
 			return !lastPage
 		})
 	if err != nil {
 		logger.Log.Fatalf("Failed read instances: %s", err)
 	}
-
+	
 	logger.Log.Infof("Reader Completed: Type=ELB, region=%s", r.Region)
 }
 
 func (r *ELBReader) toInventoryItemFromELBV2(instance *elbv2.LoadBalancer) (*model.InventoryItem, error) {
-
+	
 	// TODO we dont send entityData at this point - the poc LB dose not have IPs only DNS name
 	tagResult, err := r.ELBV2Svc.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{instance.LoadBalancerArn},
@@ -77,26 +77,18 @@ func (r *ELBReader) toInventoryItemFromELBV2(instance *elbv2.LoadBalancer) (*mod
 	}
 	tags := tagResult.TagDescriptions[0].Tags
 	itemType := model.Asset
-
+	
 	item := &model.InventoryItem{
 		EntityCategory: utils.StrPtr("compute"),
-		EntityName:     utils.StrPtr(GetValueOrDefault(awsELBTagsToMap(tags), "Name", *instance.LoadBalancerName)),
+		EntityName:     instance.LoadBalancerName,
 		EntityType:     utils.StrPtr(LBSvcType),
 		ExternalIds:    &[]string{*instance.LoadBalancerArn, *instance.DNSName},
 		ItemId:         instance.LoadBalancerArn,
 		ItemType:       &itemType,
 		Labels:         awsELBTagsToList(tags),
 	}
-
+	
 	return item, nil
-}
-
-func awsELBTagsToMap(tags []*elbv2.Tag) *map[string]string {
-	tagMap := make(map[string]string)
-	for _, tag := range tags {
-		tagMap[*tag.Key] = *tag.Value
-	}
-	return &tagMap
 }
 
 func awsELBTagsToList(tags []*elbv2.Tag) *[]model.Label {

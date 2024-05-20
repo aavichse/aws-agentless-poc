@@ -25,9 +25,7 @@ func NewInventoryService() *InventoryService {
 }
 
 func (s *InventoryService) GetV1ProviderImportLabels(c *gin.Context, params GetV1ProviderImportLabelsParams) {
-	// Mock response
-	labels := []string{"label1", "label2", "label3"}
-	c.JSON(http.StatusOK, gin.H{"labels": labels})
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func (s *InventoryService) GetV1ProviderInventory(c *gin.Context, params GetV1ProviderInventoryParams) {
@@ -37,10 +35,7 @@ func (s *InventoryService) GetV1ProviderInventory(c *gin.Context, params GetV1Pr
 
 func (s *InventoryService) GetV1ProviderTopology(c *gin.Context, params GetV1ProviderTopologyParams) {
 	// Mock response
-	topology := map[string]interface{}{
-		"nodes": []string{"node1", "node2", "node3"},
-		"edges": []string{"edge1", "edge2", "edge3"},
-	}
+	topology := map[string]interface{}{}
 	c.JSON(http.StatusOK, gin.H{"topology": topology})
 }
 

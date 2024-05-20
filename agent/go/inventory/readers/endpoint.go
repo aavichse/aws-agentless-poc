@@ -26,6 +26,11 @@ var supportedServices = map[string]*string{
 	s3:       utils.StrPtr(s3),
 }
 
+var serviceTypeToEntityCategory = map[string]*string{
+	dynamodb: utils.StrPtr("database"),
+	s3:       utils.StrPtr("storage"),
+}
+
 var svcNameRegex *regexp.Regexp
 
 func init() {
@@ -63,6 +68,7 @@ func (r *VpcEndpointReader) Read() {
 			}
 			item, _ := r.toInventoryItemFromVpcEndpoint(instance)
 			item.EntityType = svcType
+			item.EntityCategory = serviceTypeToEntityCategory[*svcType]
 
 			r.updates <- Resource{ID: *instance.VpcEndpointId, Region: r.Region, Type: string(model.MS), Item: item}
 		}
@@ -82,8 +88,7 @@ func (r *VpcEndpointReader) toInventoryItemFromVpcEndpoint(instance *ec2.VpcEndp
 	itemType := model.Asset
 
 	item := &model.InventoryItem{
-		EntityCategory: utils.StrPtr("compute"),
-		EntityData:     entityData,
+		EntityData: entityData,
 		//TODO this or the next line? EntityName:   utils.StrPtr(GetValueOrDefault(AwsTagsToMap(instance.Tags), "Name", *instance.VpcEndpointId)),
 		EntityName:  instance.ServiceName,
 		ExternalIds: &[]string{*instance.VpcEndpointId},

@@ -33,7 +33,18 @@ func NewOnboardingService(connectorID string) *OnboardingService {
 
 func (s *OnboardingService) GetV1OperationsInternalConfigMetadata(c *gin.Context) {
 	logger.Log.Warningf("API Not implemented: %s", c.Request.URL.String())
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"component-id":   s.connectorID,
+		"component-type": connector.CloudAws,
+		"opts": []gin.H{
+			{
+				"default_value": "info",
+				"description":   "Log level for cloud app components.",
+				"name":          "log_level",
+				"opt_type":      "opt_string",
+			},
+		},
+	})
 }
 
 func (s *OnboardingService) PostV1OperationsInternalInternalConfig(c *gin.Context) {
@@ -43,7 +54,7 @@ func (s *OnboardingService) PostV1OperationsInternalInternalConfig(c *gin.Contex
 
 func (s *OnboardingService) GetV1OperationsHealth(c *gin.Context) {
 	logger.Log.Warningf("API Not implemented: %s", c.Request.URL.String())
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, []gin.H{})
 }
 
 func (s *OnboardingService) GetV1OperationsMetrics(c *gin.Context) {

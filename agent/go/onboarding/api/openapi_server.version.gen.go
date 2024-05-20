@@ -40,5 +40,5 @@ func RegisterHandlersWithOptionsVersion(router gin.IRouter, si ServerInterface, 
 		ErrorHandler:       errorHandler,
 	}
 
-	router.POST(options.BaseURL+"/version-handshake", wrapper.PostVersionHandshake)
+	router.POST(options.BaseURL+"/version/version-handshake", wrapper.PostVersionHandshake)
 }

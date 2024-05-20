@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	defaultLogPath       = "/var/log/agentless/inventory.log"
-	defaultFetchInterval = 10
+	defaultLogPath        = "/var/log/agentless/inventory.log"
+	defaultFetchInterval  = 10
 	defaultMaxConcurrency = 3
 )
 
@@ -29,7 +29,7 @@ func main() {
 	RegisterHandlers(router, inventoryService)
 
 	go func() {
-		if err := router.Run("0.0.0.0:8080"); err != nil {
+		if err := router.Run("0.0.0.0:8086"); err != nil {
 			panic(err)
 		}
 	}()

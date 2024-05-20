@@ -159,4 +159,5 @@ cython_debug/
 #.idea/
 
 agent/go/inventory/inventory
+agent/go/onboarding/onboarding
 __debug*

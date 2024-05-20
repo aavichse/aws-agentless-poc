@@ -27,7 +27,7 @@ const (
 // Defines values for Status.
 const (
 	Completed    Status = "completed"
-	Failed       Status = "failed"
+	_Failed       Status = "failed"
 	InProgress   Status = "in_progress"
 	NotOnboarded Status = "not_onboarded"
 	Partial      Status = "partial"
@@ -74,8 +74,6 @@ type OnboardConfig struct {
 // OnboardConfigOperationMode defines model for OnboardConfig.OperationMode.
 type OnboardConfigOperationMode string
 
-// Status defines model for Status.
-type Status string
 
 // StatusRequest defines model for StatusRequest.
 type StatusRequest struct {

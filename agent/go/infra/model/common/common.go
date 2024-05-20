@@ -5,6 +5,7 @@ package models
 
 // Defines values for Connector.
 const (
+	CloudAws    Connector = "cloud_aws"
 	CloudAzure  Connector = "cloud_azure"
 	Packetfence Connector = "packetfence"
 )

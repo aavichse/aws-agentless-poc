@@ -5,13 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch onboarding",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}/agent/go/onboarding"
-        },
-        {
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
@@ -20,13 +13,27 @@
             "cwd": "${workspaceFolder}/run",
         },
         {
-            "name": "aws-agent",
+            "name": "onboarding",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/agent/go/onboarding"
+        },
+        {
+            "name": "inventory",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/agent/go/inventory"
+        },
+        {
+            "name": "reveal",
             "type": "debugpy",
             "request": "launch",
-            "module": "agent",
+            "module": "reveal",
             "cwd": "${workspaceFolder}/run",
             "env": {
-                 "PYTHONPATH": "${workspaceFolder}"
+                 "PYTHONPATH": "${workspaceFolder}/agent/py"
             },
             "console": "integratedTerminal"
         },

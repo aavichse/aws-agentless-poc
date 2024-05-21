@@ -2,7 +2,7 @@ import datetime
 from pydantic import BaseModel, Field, ValidationError, model_serializer
 from .vpclog_reader import FlowRecord
 from common.logger import get_logger
-from typing import Callable, Optional, Union
+from typing import Callable, Dict, Optional, Union
 from kafka import KafkaProducer
 from aggregator.model.integrations.v1.common.inventory import InventoryItem, ItemType
 from aggregator.model.integrations.v1.provider.reveal import (
@@ -18,8 +18,6 @@ from aggregator.model.integrations.v1.provider.reveal import (
     EnforcementInfo,
     Verdict
 )
-from .orchestrator import AwsInventory
-
 
 class ConnectionInfo(BaseModel):
 
@@ -150,83 +148,42 @@ LOG = get_logger(module_name=__name__)
 MSG_LOG = get_logger(module_name=__name__, logger_name='vpcflow')
 
 GCAPP_FLOWLOGS_TOPIC = 'gcapp-flowlogs-ehub'
-producer = KafkaProducer(bootstrap_servers=['ec2-44-200-243-86.compute-1.amazonaws.com:9093'],
+producer = KafkaProducer(bootstrap_servers=['ec2-3-221-127-164.compute-1.amazonaws.com:9093'],
                           value_serializer=lambda x: x.model_dump_json(exclude_none=True, by_alias=True).encode('utf-8'))
 
-class Reveal: 
-    inventory: AwsInventory = AwsInventory()
-    
 
-    def __init__(self, get_inventory_handler: Callable, 
-                 get_plan_handler: Callable):
-        self.get_inventory = get_inventory_handler
-        self.get_plan = get_plan_handler
-        self.update_inventory()
-        self.unkown_item_info = InventoryItem.model_validate(
+UNKNOWN_INFO_ITEM = InventoryItem.model_validate(
             {
                 'item-id': 'unkown', 
                 'item-type': ItemType.ASSET,
                 'external-ids': ['unkown'],   
             })
 
+class Reveal: 
+
+    def __init__(self, ipmap: Dict[str, InventoryItem], reporting_entity_id: str):
+        self.ipmap = ipmap
+        self.reporting_entity_id = reporting_entity_id
+
     def filter_by_tcp_flags(self, rec: FlowRecord) -> bool: 
         return rec.tcp_flags != 2 and rec.tcp_flags != 3
 
-    def update_inventory(self): 
-        self.count = 0
-        self.inventory = self.get_inventory()
-
-    def get_item_info_from_ip(self, ip: str) -> InventoryItem:
-        item = self.inventory.private_ips_lookup.get(ip, None)
-        if not item: 
-            return self.unkown_item_info, '-/-'
-        
-        role_value = item.entity_data.os_details.get('tags', {}).get('Role', '-')
-        
-        return InventoryItem.model_validate(
-                {
-                    'item-id': item.item_id,
-                    'item-type': ItemType.ASSET,
-                    'external-ids': [item.item_id],
-                }), f'Role/{role_value}'
-
+    def resolve_ip(self, ip: str, network: str) -> InventoryItem:
+        return self.ipmap.get((ip, network), UNKNOWN_INFO_ITEM)
 
     def send(self, rec: FlowRecord) -> ConnectionInfo:
-        
-        self.count += 1
-        # if self.filter_by_tcp_flags(rec): 
-        #     return None
-
-
-
+        if self.filter_by_tcp_flags(rec): 
+            return None
 
         # FIXME: bugfix: When a record has None values ?  
         if rec.dstport is None:
             return None
 
-        # if not '10.0.1' in rec.srcaddr or '10.0.1' not in rec.dstaddr:    
-        #     return None
+        MSG_LOG.info(f'READ: {rec.to_message()}')
 
-        if rec.srcport == 8086:
-            return None
-
-        MSG_LOG.info(f'{rec.to_short_message()}')
-
-        src_item, src_role = self.get_item_info_from_ip(rec.srcaddr)
-        dst_item, dst_role = self.get_item_info_from_ip(rec.dstaddr)
-        
-        rule_key = f'{src_role}->{dst_role}:{rec.dstport}'
-        enforce = self.get_plan().get('enforce', {})
-        rule_id = enforce.get(rule_key, None)
-        
-        verdict = Verdict.BLOCK
-        if rec.action == 'ACCEPT': 
-            verdict = Verdict.ALLOW if rule_id else Verdict.ALERT
-        
-        (enforce_info, enforce_state) = (EnforcementInfo.model_validate({
-            'verdict': verdict, 
-            'rule-id': rule_id
-        }), EnforcementState.ENFORCING)
+        # FIXME: POC not support cross VPCs resolving
+        src_item = self.resolve_ip(rec.srcaddr, rec.vpc_id)
+        dst_item = self.resolve_ip(rec.dstaddr, rec.vpc_id)
         
         msg = ConnectionInfo.model_validate({
             'direction': Direction.OUTBOUND if rec.flow_direction == 'egress' else Direction.INBOUND,
@@ -236,18 +193,16 @@ class Reveal:
             'dest-port': rec.dstport,
             'ip-protocol': IpProtocol.TCP,  # FIXME
             'ip-version': IpVersion.IPV4,
-            'enforcement-state': EnforcementState.ENFORCING,
+            'enforcement-state': EnforcementState.REVEAL_ONLY,
             'source-inventory-item': src_item,
             'dest-inventory-item': dst_item,
             'start-time': rec.start,
             'end-time': rec.end,
             'count': 1,
-            'enforcement-info': enforce_info,
-            'enforcement-state': enforce_state or EnforcementState.ENFORCING,
-            'reporting-entity': ReportingEntity(uuid='xxx', type='broker'),
+            'reporting-entity': ReportingEntity(uuid=self.reporting_entity_id, type='cloud_aws'),
         })
 
-        # MSG_LOG.info(msg.model_dump_json(by_alias=True, exclude_none=True))
+        MSG_LOG.info(f'PUBLISH: {msg.model_dump_json(by_alias=True, exclude_none=True)}')
         
         producer.send(GCAPP_FLOWLOGS_TOPIC, value=msg)
         producer.flush() 

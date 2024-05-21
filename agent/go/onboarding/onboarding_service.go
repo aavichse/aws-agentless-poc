@@ -2,12 +2,16 @@ package main
 
 import (
 	logger "agentless/infra/log"
+	utils "agentless/infra/utils"
+
+	"encoding/json"
 	"net/http"
 
 	connector "agentless/infra/model/common"
 	operations "agentless/infra/model/operations"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -53,13 +57,49 @@ func (s *OnboardingService) PostV1OperationsInternalInternalConfig(c *gin.Contex
 }
 
 func (s *OnboardingService) GetV1OperationsHealth(c *gin.Context) {
-	logger.Log.Warningf("API Not implemented: %s", c.Request.URL.String())
-	c.JSON(http.StatusOK, []gin.H{})
+	componentId, _ := uuid.Parse(s.connectorID)
+	health := operations.ComponentHealth{
+		ComponentType: connector.CloudAws,
+		ComponentId:   componentId,
+		Status: operations.ComponentStatus{
+			ApplicationsStatus: &map[string]operations.ApplicationStatus{},
+			OverallStatus:      operations.Up,
+		},
+		ComponentDetails: operations.ComponentDetails{
+			DcInventoryRevision: 0,
+			PolicyRevision:      0,
+			ComponentVersion:    utils.StrPtr("v50"),
+		},
+	}
+
+	jsonData, _ := json.Marshal(health)
+	var ginH gin.H
+	err := json.Unmarshal(jsonData, &ginH)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ginH)
 }
 
 func (s *OnboardingService) GetV1OperationsMetrics(c *gin.Context) {
-	logger.Log.Warningf("API Not implemented: %s", c.Request.URL.String())
-	c.JSON(http.StatusOK, gin.H{})
+	componentId, _ := uuid.Parse(s.connectorID)
+	metric := operations.ComponentMetrics{
+		ComponentId:      componentId,
+		ComponentMetrics: []operations.Metric{},
+		ComponentType:    string(connector.CloudAws),
+	}
+
+	jsonData, _ := json.Marshal(metric)
+	var ginH gin.H
+	err := json.Unmarshal(jsonData, &ginH)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ginH)
 }
 
 func (s *OnboardingService) GetV1OperationsEnvInfo(c *gin.Context) {
@@ -136,9 +176,9 @@ func (s *OnboardingService) PostV1OperationsStatus(c *gin.Context) {
 
 func (s *OnboardingService) PostVersionHandshake(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"version":          "1.0.0",
-		"contract-version": "1.0.0",
-		"component-id":     "1.0.0",
+		"version":          "1",
+		"contract-version": "1",
+		"component-id":     s.connectorID,
 	})
 }
 

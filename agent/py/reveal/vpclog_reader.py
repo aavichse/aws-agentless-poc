@@ -255,8 +255,8 @@ class BaseReader:
         self.boto_client = boto_client
 
         now = datetime.now()
-        self.start_time = start_time or now - timedelta(hours=7)
-        self.end_time = end_time or now + timedelta(hours=4)
+        self.start_time = start_time or now - timedelta(hours=1)
+        self.end_time = end_time or now + timedelta(hours=1)
 
         LOG.info(f"Using time range: {self.start_time} - {self.end_time}")
 

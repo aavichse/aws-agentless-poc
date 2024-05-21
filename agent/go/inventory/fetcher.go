@@ -138,6 +138,7 @@ func (f *AWSFetcher) read() {
 
 func (f *AWSFetcher) handleUpdates(doneUpdating chan<- bool) {
 	for item := range f.updates {
+		readers.AddDefaultLabels(item)
 		f.inventory[item.ID] = item
 		logger.Log.Debugf("AWSFetcher#%d item:%s, type:%s, region: %s fetched",
 			f.cycle, item.ID, item.Type, item.Region)

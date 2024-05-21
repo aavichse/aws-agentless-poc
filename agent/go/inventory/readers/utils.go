@@ -35,3 +35,11 @@ func GetValueOrDefault(tags *map[string]string, key, defaultValue string) string
 	}
 	return defaultValue
 }
+
+func AddDefaultLabels(item Resource) {
+
+	if item.Item.Labels == nil {
+		item.Item.Labels = &[]contracts.Label{}
+	}
+	*item.Item.Labels = append(*item.Item.Labels, contracts.Label{Key: "Region", Value: item.Region})
+}

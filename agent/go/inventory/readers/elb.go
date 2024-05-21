@@ -4,7 +4,10 @@ import (
 	logger "agentless/infra/log"
 	model "agentless/infra/model/common"
 	utils "agentless/infra/utils"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 )
 
@@ -15,7 +18,7 @@ const (
 type ELBReader struct {
 	ELBV2Svc *elbv2.ELBV2 // for Application Load Balancers (ALBs) and Network Load Balancers (NLBs)
 	//TODO use when supporting classic ELBSvc   *elb.ELB      for Classic Load Balancers (CLBs)
-	//TODO use when supporting classic EC2Svs   ec2iface.EC2API
+	EC2Svc  ec2iface.EC2API
 	Region  string
 	updates chan Resource
 }
@@ -24,7 +27,7 @@ func NewELBReader(sess *session.Session, region string, resource chan Resource) 
 	return &ELBReader{
 		ELBV2Svc: elbv2.New(sess),
 		//ELBSvc:  elb.New(sess),  TODO use when supporting classic
-		//EC2Svs:   ec2.New(sess), TODO use when supporting classic
+		EC2Svc:  ec2.New(sess),
 		Region:  region,
 		updates: resource,
 	}
@@ -68,7 +71,9 @@ func (r *ELBReader) Read() {
 
 func (r *ELBReader) toInventoryItemFromELBV2(instance *elbv2.LoadBalancer) (*model.InventoryItem, error) {
 
-	// TODO we dont send entityData at this point - the poc LB dose not have IPs only DNS name
+	entityData := &model.InventoryItem_EntityData{}
+	_ = entityData.FromManagedServiceData(r.toManagedServiceDataFromLambda(instance))
+
 	tagResult, err := r.ELBV2Svc.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{instance.LoadBalancerArn},
 	})
@@ -80,6 +85,7 @@ func (r *ELBReader) toInventoryItemFromELBV2(instance *elbv2.LoadBalancer) (*mod
 
 	item := &model.InventoryItem{
 		EntityCategory: utils.StrPtr("compute"),
+		EntityData:     entityData,
 		EntityName:     instance.LoadBalancerName,
 		EntityType:     utils.StrPtr(LBSvcType),
 		ExternalIds:    &[]string{*instance.LoadBalancerArn, *instance.DNSName},
@@ -104,6 +110,31 @@ func awsELBTagToLabel(tag *elbv2.Tag) *model.Label {
 		Key:   *tag.Key,
 		Value: *tag.Value,
 	}
+}
+
+func (r *ELBReader) toManagedServiceDataFromLambda(elb *elbv2.LoadBalancer) model.ManagedServiceData {
+
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: []*ec2.Filter{
+			{
+				// example from aws interface: Description: "ELB app/aws-poc-elb-example/25130940da3ebdcd",
+				// the elb name is unique per region.
+				Name:   aws.String("description"),
+				Values: []*string{aws.String("*" + *elb.LoadBalancerName + "*")},
+			},
+			{
+				// When the requester is an AWS service, such as the Elastic Load Balancing service,
+				// the requester-id will be a special alias
+				Name:   aws.String("requester-id"),
+				Values: []*string{aws.String("amazon-elb")},
+			},
+		}}
+	output, err := r.EC2Svc.DescribeNetworkInterfaces(input)
+	if err != nil {
+		logger.Log.Errorf("failed to describe network interfaces, %v", err)
+	}
+
+	return ToManagedServiceDataFromNIC(output.NetworkInterfaces)
 }
 
 // TODO use when supporting classic - check the InventoryItem fields are correct

@@ -4,10 +4,11 @@ import (
 	logger "agentless/infra/log"
 	model "agentless/infra/model/common"
 	utils "agentless/infra/utils"
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"regexp"
 )
 
 type VpcEndpointReader struct {
@@ -66,7 +67,11 @@ func (r *VpcEndpointReader) Read() {
 			if *instance.VpcEndpointType != "Interface" {
 				continue
 			}
-			item, _ := r.toInventoryItemFromVpcEndpoint(instance)
+			item, err := r.toInventoryItemFromVpcEndpoint(instance)
+			if err != nil {
+				logger.Log.Errorf("failed to dicover endpoint %s", *instance.VpcEndpointId)
+				continue
+			}
 			item.EntityType = svcType
 			item.EntityCategory = serviceTypeToEntityCategory[*svcType]
 
@@ -84,7 +89,11 @@ func (r *VpcEndpointReader) Read() {
 
 func (r *VpcEndpointReader) toInventoryItemFromVpcEndpoint(instance *ec2.VpcEndpoint) (*model.InventoryItem, error) {
 	entityData := &model.InventoryItem_EntityData{}
-	_ = entityData.FromManagedServiceData(r.toManagedServiceDataFromVpcEndpoint(instance))
+	err := entityData.FromManagedServiceData(r.toManagedServiceDataFromVpcEndpoint(instance))
+	if err != nil {
+		return nil, err
+	}
+
 	itemType := model.Asset
 
 	item := &model.InventoryItem{

@@ -44,7 +44,7 @@ func AddDefaultLabels(item Resource) {
 	*item.Item.Labels = append(*item.Item.Labels, contracts.Label{Key: "Region", Value: item.Region})
 }
 
-func ToManagedServiceDataFromNIC(ec2Nics []*ec2.NetworkInterface) contracts.ManagedServiceData {
+func ToManagedServiceDataFromNIC(ec2Nics []*ec2.NetworkInterface) *contracts.ManagedServiceData {
 
 	nics := &[]contracts.NetworkInterfaceData{}
 
@@ -53,7 +53,7 @@ func ToManagedServiceDataFromNIC(ec2Nics []*ec2.NetworkInterface) contracts.Mana
 		*nics = append(*nics, *nicData)
 	}
 
-	return contracts.ManagedServiceData{
+	return &contracts.ManagedServiceData{
 		Type: contracts.MS,
 		Nics: nics,
 	}

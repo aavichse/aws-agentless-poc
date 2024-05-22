@@ -4,6 +4,7 @@ import (
 	logger "agentless/infra/log"
 	model "agentless/infra/model/common"
 	utils "agentless/infra/utils"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -56,7 +57,12 @@ func (r *ELBReader) Read() {
 		&elbv2.DescribeLoadBalancersInput{},
 		func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
 			for _, instance := range page.LoadBalancers {
-				item, _ := r.toInventoryItemFromELBV2(instance)
+				item, err := r.toInventoryItemFromELBV2(instance)
+				if err != nil {
+					logger.Log.Errorf("failed discover load balancer %s", *instance.LoadBalancerArn)
+					continue
+				}
+
 				r.updates <- Resource{ID: *instance.LoadBalancerArn, Region: r.Region, Type: string(model.MS), Item: item}
 			}
 
@@ -72,7 +78,15 @@ func (r *ELBReader) Read() {
 func (r *ELBReader) toInventoryItemFromELBV2(instance *elbv2.LoadBalancer) (*model.InventoryItem, error) {
 
 	entityData := &model.InventoryItem_EntityData{}
-	_ = entityData.FromManagedServiceData(r.toManagedServiceDataFromElb(instance))
+	nic, err := r.toManagedServiceDataFromElb(instance)
+	if err != nil {
+		return nil, err
+	}
+
+	err = entityData.FromManagedServiceData(*nic)
+	if err != nil {
+		return nil, err
+	}
 
 	tagResult, err := r.ELBV2Svc.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{instance.LoadBalancerArn},
@@ -112,12 +126,12 @@ func awsELBTagToLabel(tag *elbv2.Tag) *model.Label {
 	}
 }
 
-func (r *ELBReader) toManagedServiceDataFromElb(elb *elbv2.LoadBalancer) model.ManagedServiceData {
+func (r *ELBReader) toManagedServiceDataFromElb(elb *elbv2.LoadBalancer) (*model.ManagedServiceData, error) {
 
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
-				// FIXME: Better match pattern considering '/' 
+				// FIXME: Better match pattern considering '/'
 				// example from aws interface: Description: "ELB app/aws-poc-elb-example/25130940da3ebdcd",
 				// the elb name is unique per region.
 				Name:   aws.String("description"),
@@ -133,9 +147,10 @@ func (r *ELBReader) toManagedServiceDataFromElb(elb *elbv2.LoadBalancer) model.M
 	output, err := r.EC2Svc.DescribeNetworkInterfaces(input)
 	if err != nil {
 		logger.Log.Errorf("failed to describe network interfaces, %v", err)
+		return nil, err
 	}
 
-	return ToManagedServiceDataFromNIC(output.NetworkInterfaces)
+	return ToManagedServiceDataFromNIC(output.NetworkInterfaces), nil
 }
 
 // TODO use when supporting classic - check the InventoryItem fields are correct

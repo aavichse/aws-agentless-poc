@@ -34,7 +34,10 @@ func (r *EC2Reader) Read() {
 	err = r.Svc.DescribeInstancesPages(input, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
 		for _, reservation := range page.Reservations {
 			for _, instance := range reservation.Instances {
-				item, _ := ToInventoryItemFrom(instance)
+				item, err := ToInventoryItemFrom(instance)
+				if err != nil {
+					logger.Log.Errorf("failed to discover ec2 %s", *instance.InstanceId)
+				}
 				r.updates <- Resource{ID: *instance.InstanceId, Region: r.Region, Type: "EC2", Item: item}
 			}
 		}

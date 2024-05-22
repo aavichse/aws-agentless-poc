@@ -18,18 +18,21 @@ type VpcEndpointReader struct {
 }
 
 const (
-	dynamodb string = "dynamodb"
-	s3       string = "s3"
+	dynamodbStr string = "dynamodb"
+	s3Str       string = "s3"
+	lambdaStr   string = "lambda"
 )
 
 var supportedServices = map[string]*string{
-	dynamodb: utils.StrPtr(dynamodb),
-	s3:       utils.StrPtr(s3),
+	dynamodbStr: utils.StrPtr(dynamodbStr),
+	s3Str:       utils.StrPtr(s3Str),
+	lambdaStr:   utils.StrPtr(lambdaStr),
 }
 
 var serviceTypeToEntityCategory = map[string]*string{
-	dynamodb: utils.StrPtr("database"),
-	s3:       utils.StrPtr("storage"),
+	dynamodbStr: utils.StrPtr("database"),
+	s3Str:       utils.StrPtr("storage"),
+	lambdaStr:   utils.StrPtr("compute"),
 }
 
 var svcNameRegex *regexp.Regexp

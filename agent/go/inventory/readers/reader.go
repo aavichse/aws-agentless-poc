@@ -21,5 +21,6 @@ func GetRegionReaders(sess *session.Session, region string, updateChen chan Reso
 		NewEC2Reader(sess, region, updateChen),
 		NewVpcEndpointReader(sess, region, updateChen),
 		NewELBReader(sess, region, updateChen),
+		NewLambdaReader(sess, region, updateChen),
 	}
 }

@@ -72,7 +72,7 @@ func (r *ELBReader) Read() {
 func (r *ELBReader) toInventoryItemFromELBV2(instance *elbv2.LoadBalancer) (*model.InventoryItem, error) {
 
 	entityData := &model.InventoryItem_EntityData{}
-	_ = entityData.FromManagedServiceData(r.toManagedServiceDataFromLambda(instance))
+	_ = entityData.FromManagedServiceData(r.toManagedServiceDataFromElb(instance))
 
 	tagResult, err := r.ELBV2Svc.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{instance.LoadBalancerArn},
@@ -112,11 +112,12 @@ func awsELBTagToLabel(tag *elbv2.Tag) *model.Label {
 	}
 }
 
-func (r *ELBReader) toManagedServiceDataFromLambda(elb *elbv2.LoadBalancer) model.ManagedServiceData {
+func (r *ELBReader) toManagedServiceDataFromElb(elb *elbv2.LoadBalancer) model.ManagedServiceData {
 
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
+				// FIXME: Better match pattern considering '/' 
 				// example from aws interface: Description: "ELB app/aws-poc-elb-example/25130940da3ebdcd",
 				// the elb name is unique per region.
 				Name:   aws.String("description"),

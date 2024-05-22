@@ -37,6 +37,7 @@ func (r *EC2Reader) Read() {
 				item, err := ToInventoryItemFrom(instance)
 				if err != nil {
 					logger.Log.Errorf("failed to discover ec2 %s", *instance.InstanceId)
+					continue
 				}
 				r.updates <- Resource{ID: *instance.InstanceId, Region: r.Region, Type: "EC2", Item: item}
 			}

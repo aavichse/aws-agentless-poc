@@ -93,6 +93,7 @@ func (r *ELBReader) toInventoryItemFromELBV2(instance *elbv2.LoadBalancer) (*mod
 	})
 	if err != nil {
 		logger.Log.Errorf("failed to describe tags for load balancer %s, %v", *instance.LoadBalancerName, err)
+		return nil, err
 	}
 	tags := tagResult.TagDescriptions[0].Tags
 	itemType := model.Asset

@@ -172,6 +172,8 @@ class Reveal:
         return self.ipmap.get((ip, network), UNKNOWN_INFO_ITEM)
 
     def send(self, rec: FlowRecord) -> ConnectionInfo:
+        MSG_LOG.info(f'READ: {rec.to_message()}')
+
         if self.filter_by_tcp_flags(rec): 
             return None
 

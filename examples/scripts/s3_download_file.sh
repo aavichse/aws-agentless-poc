@@ -26,7 +26,7 @@ done
 echo "Downloading $FILE_NAME from bucket $BUCKET_NAME..."
 if $USE_INTERFACE; then
         echo "Uploading $FILE_NAME to $BUCKET_NAME using VPC endpoint"
-        aws s3 cp "$FILE_NAME" "s3://$BUCKET_NAME/" --endpoint-url "$ENDPOINT_URL"
+        aws s3 cp "$FILE_NAME" "s3://$BUCKET_NAME/" --region us-east-1 --endpoint "$ENDPOINT_URL"
 else
         aws s3 cp "s3://$BUCKET_NAME/$FILE_NAME" "$DOWNLOAD_PATH"
 fi

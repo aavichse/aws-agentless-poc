@@ -21,7 +21,8 @@ echo "Scanning all items from $TABLE_NAME and printing in CSV format"
 if $USE_INTERFACE; then
     aws dynamodb scan \
         --table-name $TABLE_NAME \
-        --endpoint-url "$ENDPOINT_URL" \
+        --region us-east-1 \
+        --endpoint "$ENDPOINT_URL" \
         --return-consumed-capacity TOTAL | \
     jq -r '.Items[] | [.Date.S, .Open.N, .High.N, .Low.N, .Close.N, .Adj_Close.N, .Volume.N] | @csv'
 else

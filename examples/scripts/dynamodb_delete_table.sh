@@ -18,7 +18,7 @@ done
 
 echo "Deleting DynamoDB table: $TABLE_NAME"
 if $USE_INTERFACE; then
-    aws dynamodb delete-table --table-name $TABLE_NAME  --endpoint-url "$ENDPOINT_URL"
+    aws dynamodb delete-table --region us-east-1 --table-name $TABLE_NAME  --endpoint "$ENDPOINT_URL"
 
 else
     aws dynamodb delete-table --table-name $TABLE_NAME

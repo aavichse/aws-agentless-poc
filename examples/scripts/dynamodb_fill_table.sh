@@ -41,6 +41,7 @@ while [[ "$current_date" != "$end_date" ]]; do
     if $USE_INTERFACE; then
         aws dynamodb put-item \
             --table-name $TABLE_NAME \
+            --region us-east-1 \
             --item "{
                 \"$PRIMARY_KEY\": {\"S\": \"$current_date\"},
                 \"Open\": {\"N\": \"$open\"},
@@ -50,7 +51,7 @@ while [[ "$current_date" != "$end_date" ]]; do
                 \"Adj_Close\": {\"N\": \"$adj_close\"},
                 \"Volume\": {\"N\": \"$volume\"}
             }" \
-            --endpoint-url "$ENDPOINT_URL"
+            --endpoint "$ENDPOINT_URL"
     else
         aws dynamodb put-item \
             --table-name $TABLE_NAME \

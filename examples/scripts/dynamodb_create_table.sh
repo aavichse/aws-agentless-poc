@@ -27,10 +27,11 @@ echo "Creating DynamoDB table: $TABLE_NAME"
 if $USE_INTERFACE; then
     aws dynamodb create-table \
         --table-name $TABLE_NAME \
+        --region us-east-1 \
         --attribute-definitions AttributeName=$PRIMARY_KEY,AttributeType=$PRIMARY_KEY_TYPE \
         --key-schema AttributeName=$PRIMARY_KEY,KeyType=HASH \
         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
-        --endpoint-url "$ENDPOINT_URL"
+        --endpoint "$ENDPOINT_URL"
 else
     aws dynamodb create-table \
         --table-name $TABLE_NAME \

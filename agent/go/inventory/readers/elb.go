@@ -129,14 +129,25 @@ func awsELBTagToLabel(tag *elbv2.Tag) *model.Label {
 
 func (r *ELBReader) toManagedServiceDataFromElb(elb *elbv2.LoadBalancer) (*model.ManagedServiceData, error) {
 
+	var subnetIds []*string
+	for _, zone := range elb.AvailabilityZones {
+		subnetIds = append(subnetIds, zone.SubnetId)
+	}
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
-				// FIXME: Better match pattern considering '/'
+				Name:   aws.String("subnet-id"),
+				Values: subnetIds,
+			},
+			{
+				Name:   aws.String("group-id"),
+				Values: elb.SecurityGroups,
+			},
+			{
 				// example from aws interface: Description: "ELB app/aws-poc-elb-example/25130940da3ebdcd",
 				// the elb name is unique per region.
 				Name:   aws.String("description"),
-				Values: []*string{aws.String("*" + *elb.LoadBalancerName + "*")},
+				Values: []*string{aws.String("*/" + *elb.LoadBalancerName + "/*")},
 			},
 			{
 				// When the requester is an AWS service, such as the Elastic Load Balancing service,

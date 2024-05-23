@@ -1,0 +1,148 @@
+{
+    "adx_cluster": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcappadxur5y8fokabpu"
+    },
+    "adx_db": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp_db"
+    },
+    "aws_api_gateway_url": {
+      "sensitive": false,
+      "type": "string",
+      "value": "http://ec2-3-221-127-164.compute-1.amazonaws.com"
+    },
+    "kafka-config": {
+        "bootstrap.servers": "ec2-3-221-127-164.compute-1.amazonaws.com:9093",
+        "group.id": "GC_Consumer",
+        "enable.auto.commit": "True", 
+        "security.protocol": "PLAINTEXT"
+    },
+    "aws_api_gateway_key": {
+      "sensitive": true,
+      "type": "string",
+      "value": ""
+    },
+    "cloudapp_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "cf178df3-1d8c-46a5-86b7-974a941c4d80"
+    },
+    "contract_version": {
+      "sensitive": false,
+      "type": "string",
+      "value": "1"
+    },
+    "eventhub_asset_updates": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp-asset-ehub"
+    },
+    "eventhub_connection_string": {
+      "sensitive": true,
+      "type": "string",
+      "value": "Endpoint=sb://ec2-44-200-243-86.compute-1.amazonaws.com/;SharedAccessKeyName=;SharedAccessKey="
+    },
+    "eventhub_flowlogs": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp-flowlogs-ehub"
+    },
+    "eventhub_gcc_events": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp-gcc-events-ehub"
+    },
+    "eventhub_hostname": {
+      "sensitive": false,
+      "type": "string",
+      "value": "ec2-44-200-243-86.compute-1.amazonaws.com"
+    },
+    "flow_log_collector_queue_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "/subscriptions/6974b4cf-6bf8-4454-8d22-a8f33084d699/resourceGroups/gcapp-resource-group-ms2-integration/providers/Microsoft.ServiceBus/namespaces/gcapp-sbus-ns-Ur5y8FOkaBPU/queues/flowlog-event-collector"
+    },
+    "flowlogs_1m_dc_ev_cg": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp-flowlogs-1m-grp-ehub"
+    },
+    "flowlogs_1m_dc_ev_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "/subscriptions/6974b4cf-6bf8-4454-8d22-a8f33084d699/resourceGroups/gcapp-resource-group-ms2-integration/providers/Microsoft.EventHub/namespaces/gcapp-evhub-ns-internal-Ur5y8FOkaBPU/eventhubs/gcapp-flowlogs-1m-ehub"
+    },
+    "gcapp_central_storage_acc": {
+      "sensitive": false,
+      "type": "string",
+      "value": "https://gcappstgur5y8fokabpu.blob.core.windows.net/"
+    },
+    "gcapp_central_storage_acc_connection_str": {
+      "sensitive": true,
+      "type": "string",
+      "value": "DefaultEndpointsProtocol=https;AccountName=gcappstgur5y8fokabpu;AccountKey=;EndpointSuffix=core.windows.net"
+    },
+    "gcapp_deployed_subscription_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "6974b4cf-6bf8-4454-8d22-a8f33084d699"
+    },
+    "gcapp_outbound_subnet_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "/subscriptions/6974b4cf-6bf8-4454-8d22-a8f33084d699/resourceGroups/gcapp-resource-group-ms2-integration/providers/Microsoft.Network/virtualNetworks/gcapp-vnet-Ur5y8FOkaBPU/subnets/fc_outbound_subnet"
+    },
+    "inventory_update_connection_ev_cg": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp-inventory-cache-update-grp-ehub"
+    },
+    "inventory_update_connection_ev_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "/subscriptions/6974b4cf-6bf8-4454-8d22-a8f33084d699/resourceGroups/gcapp-resource-group-ms2-integration/providers/Microsoft.EventHub/namespaces/gcapp-evhub-ns-internal-Ur5y8FOkaBPU/eventhubs/gcapp-inventory-cache-update-ehub"
+    },
+    "managed_user_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "/subscriptions/6974b4cf-6bf8-4454-8d22-a8f33084d699/resourceGroups/gcapp-resource-group-ms2-integration/providers/Microsoft.ManagedIdentity/userAssignedIdentities/gcapp-identity"
+    },
+    "peering_info_update_connection_ev_cg": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp-peering-info-cache-update-grp-ehub"
+    },
+    "peering_info_update_connection_ev_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "/subscriptions/6974b4cf-6bf8-4454-8d22-a8f33084d699/resourceGroups/gcapp-resource-group-ms2-integration/providers/Microsoft.EventHub/namespaces/gcapp-evhub-ns-internal-Ur5y8FOkaBPU/eventhubs/gcapp-peering-info-cache-update-ehub"
+    },
+    "resource_group_location": {
+      "sensitive": false,
+      "type": "string",
+      "value": "eastus2"
+    },
+    "resource_group_name": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcapp-resource-group-ms2-integration"
+    },
+    "tenant_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "63ff34fc-cc0a-4a83-8b0a-a1a6c354d473"
+    },
+    "vm_jumphost_password": {
+      "sensitive": true,
+      "type": "string",
+      "value": "qy1tPG4ueiOJQB6o"
+    },
+    "vm_jumphost_username": {
+      "sensitive": false,
+      "type": "string",
+      "value": "gcappvm"
+    }
+  }

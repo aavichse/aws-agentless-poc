@@ -12,7 +12,7 @@ LOG = get_logger(module_name=__name__)
 
 
 # Nginx forward the request to inventory service
-INVENTORY_URL = "http://localhost/v1/provider/inventory"
+INVENTORY_URL = "http://localhost:8080/v1/provider/inventory"
 
 
 @retry(tries=5, delay=2, backoff=2, exceptions=(requests.exceptions.RequestException,))

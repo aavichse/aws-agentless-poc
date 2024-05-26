@@ -1,4 +1,4 @@
-import datetime
+import os
 from pydantic import BaseModel, Field, ValidationError, model_serializer
 from .vpclog_reader import FlowRecord
 from common.logger import get_logger
@@ -148,8 +148,11 @@ LOG = get_logger(module_name=__name__)
 MSG_LOG = get_logger(module_name=__name__, logger_name='vpcflow')
 
 GCAPP_FLOWLOGS_TOPIC = 'gcapp-flowlogs-ehub'
-producer = KafkaProducer(bootstrap_servers=['ec2-3-221-127-164.compute-1.amazonaws.com:9093'],
-                          value_serializer=lambda x: x.model_dump_json(exclude_none=True, by_alias=True).encode('utf-8'))
+GCAPP_BROKER = os.getenv('GCAPP_BROKER', '') + ':9093'
+
+producer = KafkaProducer(
+    bootstrap_servers=[GCAPP_BROKER],
+    value_serializer=lambda x: x.model_dump_json(exclude_none=True, by_alias=True).encode('utf-8'))
 
 
 UNKNOWN_INFO_ITEM = InventoryItem.model_validate(
@@ -172,7 +175,7 @@ class Reveal:
         return self.ipmap.get((ip, network), UNKNOWN_INFO_ITEM)
 
     def send(self, rec: FlowRecord) -> ConnectionInfo:
-        MSG_LOG.info(f'READ: {rec.to_message()}')
+        #MSG_LOG.info(f'READ: {rec.to_message()}')
 
         if self.filter_by_tcp_flags(rec): 
             return None

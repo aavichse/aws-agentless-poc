@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	defaultLogPath = "/var/log/agentless/inventory.log"
+	defaultLogPath = "/var/log/guardicore/onboarding.log"
 
 	// FIXME: Hard coded for the POC
 	defaultConnectorID = "cf178df3-1d8c-46a5-86b7-974a941c4d80"
@@ -30,7 +30,7 @@ func main() {
 	api.RegisterHandlers(router, onboardingService)
 
 	go func() {
-		if err := router.Run("0.0.0.0:8080"); err != nil {
+		if err := router.Run("0.0.0.0:8081"); err != nil {
 			panic(err)
 		}
 	}()

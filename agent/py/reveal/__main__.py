@@ -12,12 +12,12 @@ log_init(
     base_name=LOGGER_NAME,
     use_stderr=True,
     show_thread_name=True,
-    log_path="/var/log/agentless",
+    log_path="/var/log/guardicore",
 )
 
 log_init(
-    base_name="vpcflow",
-    log_path=os.getcwd(),
+    base_name=LOGGER_NAME,
+    log_path="/var/log/guardicore",
     show_thread_name=False,
     use_stderr=False,
     logger_name="vpcflow",

@@ -36,8 +36,7 @@ func (s *InventoryService) GetV1ProviderInventory(c *gin.Context, params GetV1Pr
 
 func (s *InventoryService) GetV1ProviderTopology(c *gin.Context, params GetV1ProviderTopologyParams) {
 	// Mock response
-	topology := map[string]interface{}{}
-	c.JSON(http.StatusOK, gin.H{"topology": topology})
+	c.JSON(http.StatusOK, gin.H{"topology": []gin.H{}})
 }
 
 func (s *InventoryService) Update(revision int, fetchedInventory *map[string]readers.Resource) {

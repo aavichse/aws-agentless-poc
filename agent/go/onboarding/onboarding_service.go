@@ -113,11 +113,18 @@ func (s *OnboardingService) GetV1OperationsEnvInfo(c *gin.Context) {
 }
 
 func (s *OnboardingService) GetV1OperationsEnvUnitsList(c *gin.Context, params operations.GetV1OperationsEnvUnitsListParams) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":     s.accountID,
-		"name":   s.accountID,
-		"parent": "None",
-	})
+	generatedUUID := uuid.NewSHA1(uuid.NameSpaceDNS, []byte(s.accountID))
+
+	envUnits := []operations.EnvUnit{
+		{
+			Id:     generatedUUID,
+			Name:   s.accountID,
+			Parent: "",
+		},
+		// Add more EnvUnit objects as needed
+	}
+
+	c.JSON(http.StatusOK, envUnits)
 }
 
 func (s *OnboardingService) GetV1OperationsLogDownload(c *gin.Context, params operations.GetV1OperationsLogDownloadParams) {

@@ -42,7 +42,7 @@ ENV OPTDIR=/opt/guardicore
 
 RUN apk add --no-cache nginx
 
-COPY ./daemons/nginx /etc/nginx
+COPY ./examples/nginx /etc/nginx
 
 WORKDIR $OPTDIR
 

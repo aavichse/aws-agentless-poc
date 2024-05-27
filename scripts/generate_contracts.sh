@@ -6,7 +6,7 @@ CONTRACTS_SRC_DIR="$HOME/work/contracts/guardicore/connector/v1"
 find "$CONTRACTS_SRC_DIR" -name '*.yaml' -exec bash -c '
   FILE="$1"
   parentdir=$(basename "$(dirname "$FILE")")
-  outdir=$(pwd)/agent/go/infra/model/$parentdir
+  outdir=$(pwd)/../agent/go/infra/model/$parentdir
   mkdir -p $outdir 
   OUTPUT_FILE="$outdir/$(basename ${FILE%.yaml}).go"
   echo "Generating Go code for $FILE -> $OUTPUT_FILE"

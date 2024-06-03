@@ -2,7 +2,7 @@ import os
 from pydantic import BaseModel, Field, ValidationError, model_serializer
 from .vpclog_reader import FlowRecord
 from common.logger import get_logger
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional, Tuple, Union
 from kafka import KafkaProducer
 from aggregator.model.integrations.v1.common.inventory import InventoryItem, ItemType
 from aggregator.model.integrations.v1.provider.reveal import (
@@ -129,8 +129,8 @@ class ConnectionInfo(BaseModel):
     # # Added to base model: check no double process info and convert event_type & direction to ConnectionEventType
     # @model_serializer(mode='wrap')
     # def serialize_model(self, handler):
-    #     if self.source_process_info and self.dest_process_info:
-    #         raise ValidationError("source process info and dest process info can't co-exist")
+    #     # if self.source_process_info and self.dest_process_info:
+    #     #     raise ValidationError("source process info and dest process info can't co-exist")
     #     self.event_type = {
     #             (EventType.SUCCESSFUL.value, Direction.OUTBOUND.value): ConnectionEventType.NewSuccessOutgoingConnection,
     #             (EventType.SUCCESSFUL.value, Direction.INBOUND.value): ConnectionEventType.NewSuccessIncomingConnection,
@@ -154,13 +154,17 @@ producer = KafkaProducer(
     bootstrap_servers=[GCAPP_BROKER],
     value_serializer=lambda x: x.model_dump_json(exclude_none=True, by_alias=True).encode('utf-8'))
 
+# producer = KafkaProducer(
+#	bootstrap_servers=['ec2-44-204-113-186.compute-1.amazonaws.com:9093'],
+#    value_serializer=lambda x: x.model_dump_json(exclude_none=True, by_alias=True).encode('utf-8'))
 
-UNKNOWN_INFO_ITEM = InventoryItem.model_validate(
-            {
-                'item-id': 'unkown', 
-                'item-type': ItemType.ASSET,
-                'external-ids': ['unkown'],   
-            })
+
+# UNKNOWN_INFO_ITEM = InventoryItem.model_validate(
+#             {
+#                 'item-id': 'unkown', 
+#                 'item-type': ItemType.ASSET,
+#                 'external-ids': ['unkown'],   
+#             })
 
 class Reveal: 
 
@@ -172,27 +176,74 @@ class Reveal:
         return rec.tcp_flags != 2 and rec.tcp_flags != 3
 
     def resolve_ip(self, ip: str, network: str) -> InventoryItem:
-        return self.ipmap.get((ip, network), UNKNOWN_INFO_ITEM)
+        return self.ipmap.get((ip, network), None)
+
+    def calc_direction(self, 
+                       record: FlowRecord, 
+                       src_item_info: InventoryItem, 
+                       dst_item_info: InventoryItem) -> Direction: 
+        if src_item_info and dst_item_info: 
+            return Direction.BI_DIRECTIONAL
+        if src_item_info:
+            return Direction.OUTBOUND
+        if dst_item_info: 
+            return Direction.INBOUND
+        
+        return None
+    
+
+    def calc_event_type(self, rec: FlowRecord, direction: Direction):
+        if rec.action == "ACCEPT": 
+            if direction == Direction.OUTBOUND:
+                return ConnectionEventType.NewSuccessOutgoingConnection
+            if direction == Direction.INBOUND:
+                return ConnectionEventType.NewSuccessIncomingConnection
+            if direction == Direction.BI_DIRECTIONAL:
+                return ConnectionEventType.NewSuccessMatchedConnection
+            
+        # FAILED
+            if direction == Direction.OUTBOUND:
+                return ConnectionEventType.NewFailedOutgoingConnection
+            if direction == Direction.INBOUND:
+                return ConnectionEventType.NewFailedIncomingConnection
+            if direction == Direction.BI_DIRECTIONAL:
+                return ConnectionEventType.NewFailedMatchedConnection
+        
+        
+    #     self.event_type = {
+    #             (EventType.SUCCESSFUL.value, Direction.OUTBOUND.value): ConnectionEventType.NewSuccessOutgoingConnection,
+    #             (EventType.SUCCESSFUL.value, Direction.INBOUND.value): ConnectionEventType.NewSuccessIncomingConnection,
+    #             (EventType.SUCCESSFUL.value, Direction.BI_DIRECTIONAL.value): ConnectionEventType.NewSuccessMatchedConnection,
+    #             (EventType.SUCCESSFUL.value, Direction.OUTBOUND_ONLY.value): ConnectionEventType.NewSuccessOutgoingConnection,
+    #             (EventType.FAILED.value, Direction.OUTBOUND.value): ConnectionEventType.NewFailedOutgoingConnection,
+    #             (EventType.FAILED.value, Direction.INBOUND.value): ConnectionEventType.NewFailedIncomingConnection,
+    #             (EventType.FAILED.value, Direction.BI_DIRECTIONAL.value): ConnectionEventType.NewFailedMatchedConnection,
+    #             (EventType.FAILED.value, Direction.OUTBOUND_ONLY.value): ConnectionEventType.NewFailedOutgoingConnection,
+    #         }.get((self.event_type.value, self.direction.value))
+    #     return handler(self)
+
 
     def send(self, rec: FlowRecord) -> ConnectionInfo:
+<<<<<<< HEAD
         #MSG_LOG.info(f'READ: {rec.to_message()}')
+=======
+        # MSG_LOG.info(f'READ: {rec.to_message()}')
+>>>>>>> ebe2e4d (Fixes for NAB PoC)
 
-        if self.filter_by_tcp_flags(rec): 
-            return None
+        if rec.dstport > rec.srcport: 
+            return
 
-        # FIXME: bugfix: When a record has None values ?  
-        if rec.dstport is None:
-            return None
-
-        MSG_LOG.info(f'READ: {rec.to_message()}')
-
-        # FIXME: POC not support cross VPCs resolving
         src_item = self.resolve_ip(rec.srcaddr, rec.vpc_id)
         dst_item = self.resolve_ip(rec.dstaddr, rec.vpc_id)
         
+        if src_item is None and dst_item is None: 
+            return 
+        
+        direction = self.calc_direction(record=rec, src_item_info=src_item, dst_item_info=dst_item)
+        
         msg = ConnectionInfo.model_validate({
-            'direction': Direction.OUTBOUND if rec.flow_direction == 'egress' else Direction.INBOUND,
-            'event-type': EventType.SUCCESSFUL if rec.action == 'ACCEPT' else EventType.FAILED,
+            'direction': direction,
+            'event-type': EventType.SUCCESSFUL.value if rec.action == 'ACCEPT' else EventType.FAILED.value,
             'source-ip': rec.srcaddr,
             'dest-ip': rec.dstaddr,
             'dest-port': rec.dstport,
@@ -201,13 +252,14 @@ class Reveal:
             'enforcement-state': EnforcementState.REVEAL_ONLY,
             'source-inventory-item': src_item,
             'dest-inventory-item': dst_item,
-            'start-time': rec.start,
-            'end-time': rec.end,
-            'count': 1,
+            'start-time': 1718010000, #rec.start,
+            'end-time': 1718014423, #rec.end,
+            'count': rec.count,
             'reporting-entity': ReportingEntity(uuid=self.reporting_entity_id, type='cloud_aws'),
         })
 
-        MSG_LOG.info(f'PUBLISH: {msg.model_dump_json(by_alias=True, exclude_none=True)}')
+        LOG.info(f'PUBLISH: {msg.model_dump_json(by_alias=True, exclude_none=True)}')
         
         producer.send(GCAPP_FLOWLOGS_TOPIC, value=msg)
         producer.flush() 
+

@@ -1,5 +1,8 @@
 {
     "python.envFile": "${workspaceFolder}/.env",
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}/agent/py"
+    },
     "files.exclude": {
         "**/__pycache__": true,
         "**/.venv": true,
@@ -9,9 +12,14 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./test",
+        "./agent/py/tests",
         "-p",
         "test*.py"
     ],
-    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "-s",
+        "./agent/py/tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

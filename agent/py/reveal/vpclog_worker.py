@@ -1,9 +1,12 @@
 import threading
 import time
+from typing import Dict, List
 import boto3
 from datetime import datetime, timedelta, timezone
-from .vpclog_reader import FlowLogsS3Reader
+from .vpclog_reader import FlowLogsS3Reader, FlowRecord, FlowRecordHeader
 from .vpclog_reveal import Reveal
+from .vpclog_processor import filter_and_aggregate_flowlog
+from aggregator.model.integrations.v1.common.inventory import InventoryItem
 from .ipmap_fetcher import fetch_ipmap
 from common.logger import get_logger
 
@@ -12,20 +15,20 @@ LOG = get_logger(module_name=__name__)
 
 class VPCLogWorker:
 
-    def __init__(self, region: str, location: str, interval: int, 
-                 reporting_entity_id: str) -> None:
-        self.region = region
-        self.location = location
+    def __init__(self, vpclog_s3_bucket_name: str, interval: int, 
+                 reporting_entity_id: str, dump: bool = False) -> None:
+        self.vpclog_s3_bucket_name = vpclog_s3_bucket_name
         self.interval = interval
         self.reader_lock = threading.Lock()
         self.running = False
         self.worker_thread = None
         self.boto_client = boto3.client("s3")
         self.reporting_entity_id = reporting_entity_id
+        self.log_records = dump
 
     def start(self): 
         if not self.running: 
-            LOG.info(f'Starting vpclog worker for region {self.region}')
+            LOG.info(f'Starting vpclog worker at S3 bucket={self.vpclog_s3_bucket_name}')
             self.start_time = datetime.now() - timedelta(hours=1)
             self.running = True
             self.worker_thread = threading.Thread(target=self.run)
@@ -40,7 +43,7 @@ class VPCLogWorker:
                 start_time = time.time()
                 self.reader_lock.acquire()
                 try:
-                    self.vpclog_reader()
+                    self.read_flowlogs()
                 finally:
                     self.reader_lock.release()
                 duration = time.time() - start_time
@@ -56,14 +59,26 @@ class VPCLogWorker:
         self.running = False
         if self.worker_thread: 
             self.worker_thread.join()
-            LOG.info(f'Stop vpclog worker for region {self.region}')
+            LOG.info(f'Stop vpclog worker at S3 bucket ={self.vpclog_s3_bucket_name}')
 
-    def vpclog_reader(self):
+    def read_flowlogs(self):
         ipmap = fetch_ipmap()
-        reader = FlowLogsS3Reader(location=self.location, boto_client=self.boto_client)
+        reader = FlowLogsS3Reader(location=self.vpclog_s3_bucket_name, boto_client=self.boto_client, dump=self.log_records)
         reader.memorize_previous_runs()
 
-        reveal = Reveal(ipmap=ipmap, reporting_entity_id=self.reporting_entity_id)
+        buffered_records = []
 
-        for record in reader: 
+        for rec in reader: 
+            buffered_records.append(rec)
+            if len(buffered_records) > 200:   # FIXME: 200 , work in batch 
+                self.publish(records=buffered_records, ipmap=ipmap)
+                buffered_records = []   # next batch
+
+        if len(buffered_records) > 0:   # publish left over
+            self.publish(records=buffered_records, ipmap=ipmap)
+         
+    def publish(self, records:List[FlowRecord], ipmap: Dict[str, InventoryItem]): 
+        revealed_records = filter_and_aggregate_flowlog(records)
+        reveal = Reveal(ipmap=ipmap, reporting_entity_id=self.reporting_entity_id)
+        for record in revealed_records: 
             reveal.send(record)

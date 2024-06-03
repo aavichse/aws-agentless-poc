@@ -8,8 +8,11 @@ Host gca-vm-llm
 Host gca-vm-monitor
     HostName  ec2-3-80-118-248.compute-1.amazonaws.com
 
-Host gca-vm-cloudapp
-    HostName  ec2-44-200-243-86.compute-1.amazonaws.com
+Host gca-vm-nab
+    HostName  ec2-44-204-116-223.compute-1.amazonaws.com
+
+Host gca-vm-nab-test
+    HostName  ec2-44-204-113-186.compute-1.amazonaws.com
 
 host gca-*
     User ubuntu

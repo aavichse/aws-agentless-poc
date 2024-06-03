@@ -2,6 +2,7 @@ import os
 from os.path import basename
 from calendar import timegm
 from datetime import datetime, timedelta, timezone
+from typing import List
 from dateutil.rrule import rrule, DAILY
 import pandas as pd
 from io import BytesIO
@@ -69,6 +70,10 @@ DEFAULT_FIELDS = (
 S3_CSV_FILTER_QUERY = "dstport == '9000'"
 
 
+class FlowRecordHeader: 
+    def __init__(self, fields: List[str]):
+        self.header = fields
+
 class FlowRecord:
     """
     Given a VPC Flow Logs event dictionary, returns a Python object whose
@@ -124,6 +129,7 @@ class FlowRecord:
         "packets_lost_blackhole",
         "packets_lost_mtu_exceeded",
         "packets_lost_ttl_expired",
+        "count",
     ]
 
     def __init__(self, event_data, EPOCH_32_MAX=2147483647):
@@ -192,6 +198,8 @@ class FlowRecord:
             ("packets_lost_blackhole", int),
             ("packets_lost_mtu_exceeded", int),
             ("packets_lost_ttl_expired", int),
+            ("count", int),
+            
         ):
             value = event_data.get(key, "-")
             if value == "-" or value == "None" or value is None:
@@ -242,7 +250,7 @@ class FlowRecord:
         return " ".join(ret)
     
     def to_short_message(self):
-        return f'{self.action} {self.flow_direction} {self.srcaddr}:{self.srcport}-{self.dstaddr}:{self.dstport}'
+        return f'{self.action}  {self.srcaddr}:{self.srcport}-{self.dstaddr}:{self.dstport};{self.count}'
 
 
 class BaseReader:
@@ -251,11 +259,13 @@ class BaseReader:
         boto_client: boto3.client,
         start_time: datetime = None,
         end_time: datetime = None,
+        dump: bool = False, 
     ):
         self.boto_client = boto_client
+        self.dump = dump
 
         now = datetime.now()
-        self.start_time = start_time or now - timedelta(hours=1)
+        self.start_time = start_time or now - timedelta(hours=8)
         self.end_time = end_time or now + timedelta(hours=1)
 
         LOG.info(f"Using time range: {self.start_time} - {self.end_time}")
@@ -282,7 +292,7 @@ class FlowLogsS3Reader(BaseReader):
         location_parts = (location.rstrip("/") + "/").split("/", 1)
         self.bucket, self.prefix = location_parts
         self.done_keys = set()
-        self.done_filename = "done.txt"
+        self.done_filename = self.bucket+".done.txt"
         self.current_key = None
 
     def _get_account_prefixes(self):
@@ -300,7 +310,8 @@ class FlowLogsS3Reader(BaseReader):
         )
         for item in resp.get("CommonPrefixes", []):
             prefix = item["Prefix"]
-            account_id = prefix.rsplit("=", 2)[1][:-1]
+            #account_id = prefix.rsplit("=", 2)[1][:-1]
+            account_id = '/'+prefix.split('/')[1]
             # LOG.info(f"Found account: {account_id}, {prefix=}")
             yield prefix
 
@@ -317,11 +328,12 @@ class FlowLogsS3Reader(BaseReader):
         resp = self.boto_client.list_objects_v2(
             Bucket=self.bucket,
             Delimiter="/",
-            Prefix=account_prefix + "aws-service=vpcflowlogs/",
+            Prefix=account_prefix + "vpcflowlogs/",
         )
         for item in resp.get("CommonPrefixes", []):
             prefix = item["Prefix"]
-            region_name = prefix.rsplit("=", 2)[2][:-1]
+            #region_name = prefix.rsplit("=", 2)[2][:-1]
+            region_name = '/'+prefix.split('/')[-2]
             # LOG.info(f"Found region: {region_name}, {prefix=}")
             yield prefix
 
@@ -336,7 +348,7 @@ class FlowLogsS3Reader(BaseReader):
         dtstart = self.start_time.replace(hour=0, minute=0, second=0, microsecond=0)
         until = self.end_time.replace(hour=0, minute=0, second=0, microsecond=0)
         for dt in rrule(freq=DAILY, dtstart=dtstart, until=until):
-            date_prefix = dt.strftime("year=%Y/month=%m/day=%d/")
+            date_prefix = dt.strftime("%Y/%m/%d/")
             date = date_prefix[:-1]
             # LOG.info(f"Found date: {date_prefix}")
             yield date_prefix
@@ -379,8 +391,17 @@ class FlowLogsS3Reader(BaseReader):
                     for key in self._get_keys(prefix):
                         yield key
 
+    def dump_csv(self, csvname: str, values: List[str]):
+        with open(csvname, 'a') as csv:
+            csv.write(" ".join(values) + "\n")
+
     def _read_file(self, key):
         self.current_key = key
+        
+        csv_file = None
+        if self.dump: 
+            csv_file = key.split('/')[-1]+".csv"
+        
         resp = self.boto_client.get_object(Bucket=self.bucket, Key=key)
         body = resp["Body"].read()
 
@@ -391,10 +412,16 @@ class FlowLogsS3Reader(BaseReader):
             df = pd.read_csv(
                 file, compression="gzip", sep="\s+", header=0, low_memory=True
             )
+            
+            if csv_file:
+                self.dump_csv(csv_file, df.columns.to_list())
+
             df.rename(columns=lambda x: x.replace("-", "_"), inplace=True)
             df.drop(columns=df.columns.difference(DEFAULT_FIELDS), inplace=True)
-            # df.query(S3_CSV_FILTER_QUERY, inplace=True)
             for index, row in df.iterrows():
+                if csv_file:
+                    self.dump_csv(csv_file, map(str, row.values))
+                    
                 yield row.to_dict()
         self.mark_done()
 
@@ -405,7 +432,10 @@ class FlowLogsS3Reader(BaseReader):
     def _reader(self):
         for event_data in self._read_streams():
             try:
-                yield FlowRecord(event_data)
+                if isinstance(event_data, list):
+                    yield FlowRecordHeader(event_data)
+                else:
+                    yield FlowRecord(event_data)
             except Exception as e:
                 LOG.error(f"Error reading record: {e}")
 

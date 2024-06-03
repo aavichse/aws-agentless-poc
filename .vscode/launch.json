@@ -27,7 +27,7 @@
             "program": "${workspaceFolder}/agent/go/inventory"
         },
         {
-            "name": "reveal",
+            "name": "reveal-nonprod",
             "type": "debugpy",
             "request": "launch",
             "module": "reveal",
@@ -35,8 +35,28 @@
             "env": {
                  "PYTHONPATH": "${workspaceFolder}/agent/py"
             },
+            "args": [
+                "--s3-bucket-name", 
+                "nabcert-private-nonprod-v1975-flow-log", 
+                "--dump"
+            ],
             "console": "integratedTerminal"
         },
-
+        {
+            "name": "reveal-tooling",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "reveal",
+            "cwd": "${workspaceFolder}/run",
+            "env": {
+                 "PYTHONPATH": "${workspaceFolder}/agent/py"
+            },
+            "args": [
+                "--s3-bucket-name", 
+                "nabcert-tooling-nonprod-v1975-flow-log", 
+                "--dump"
+            ],
+            "console": "integratedTerminal"
+        },
     ]
 }

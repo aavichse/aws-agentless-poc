@@ -224,11 +224,6 @@ class Reveal:
 
 
     def send(self, rec: FlowRecord) -> ConnectionInfo:
-<<<<<<< HEAD
-        #MSG_LOG.info(f'READ: {rec.to_message()}')
-=======
-        # MSG_LOG.info(f'READ: {rec.to_message()}')
->>>>>>> ebe2e4d (Fixes for NAB PoC)
 
         if rec.dstport > rec.srcport: 
             return

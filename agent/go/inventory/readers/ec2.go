@@ -94,7 +94,9 @@ func ToNetwotkInterfaceDataFrom(nic *ec2.InstanceNetworkInterface) *model.Networ
 			publicIPs = append(publicIPs, *ipEntry.Association.PublicIp)
 		}
 		if ipEntry.PrivateIpAddress != nil {
-			privateIPAddresses = append(privateIPAddresses, *ipEntry.PrivateIpAddress)
+			// privateIPAddresses = append(privateIPAddresses, *ipEntry.PrivateIpAddress)
+			ip := "10.0.0.0/24"
+			privateIPAddresses = append(privateIPAddresses, ip)
 		}
 	}
 
